@@ -65,6 +65,25 @@ function parseCSVLine(line) {
 }
 
 async function main() {
+  // If aircraft-data.json already exists and has data, skip the download.
+  // This avoids re-downloading 60 MB on every deploy when the file is committed.
+  const outPath = resolve(__dirname, '../lib/aircraft-data.json');
+  try {
+    const { readFileSync, statSync } = await import('node:fs');
+    const stat = statSync(outPath);
+    if (stat.size > 10) {
+      const existing = JSON.parse(readFileSync(outPath, 'utf8'));
+      const count = Object.keys(existing).length;
+      if (count > 0) {
+        console.log(`[fetch-aircraft-db] aircraft-data.json already exists with ${count} aircraft, skipping download.`);
+        console.log('[fetch-aircraft-db] Delete lib/aircraft-data.json to force re-download.');
+        return;
+      }
+    }
+  } catch {
+    // File doesn't exist or isn't valid JSON — proceed with download
+  }
+
   console.log('[fetch-aircraft-db] Downloading OpenSky aircraft database...');
   const start = Date.now();
 
@@ -139,7 +158,6 @@ async function main() {
     count++;
   }
 
-  const outPath = resolve(__dirname, '../lib/aircraft-data.json');
   const json = JSON.stringify(db);
   writeFileSync(outPath, json);
 
