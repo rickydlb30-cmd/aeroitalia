@@ -22,6 +22,8 @@ import {
   type FleetClass,
 } from '@/lib/fleet-data';
 import type { InventoryAircraft } from '@/lib/aircraft-db';
+import { AircraftSilhouette } from './map-view';
+import { Download } from 'lucide-react';
 
 // Lazy-load map components so the page still renders without mapbox
 import dynamic from 'next/dynamic';
@@ -653,17 +655,27 @@ function InventoryView({
         </div>
       </div>
 
-      {/* Search bar */}
+      {/* Search bar + download */}
       <div className="p-4 border-b border-[#222222]">
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#888]" />
-          <input
-            type="text"
-            placeholder="Filter by airline, type, country, or registration..."
-            value={search}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full bg-[#111111] border border-[#222222] text-[#e5e5e5] text-sm pl-9 pr-3 py-2 rounded-lg placeholder:text-[#555] focus:outline-none focus:border-[#444]"
-          />
+        <div className="flex items-center gap-3">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#888]" />
+            <input
+              type="text"
+              placeholder="Filter by airline, type, country, or registration..."
+              value={search}
+              onChange={(e) => onSearchChange(e.target.value)}
+              className="w-full bg-[#111111] border border-[#222222] text-[#e5e5e5] text-sm pl-9 pr-3 py-2 rounded-lg placeholder:text-[#555] focus:outline-none focus:border-[#444]"
+            />
+          </div>
+          <a
+            href="/api/inventory/csv"
+            download
+            className="flex items-center gap-1.5 bg-[#222] hover:bg-[#333] text-[#e5e5e5] text-xs px-3 py-2 rounded-lg border border-[#333] transition-colors shrink-0"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Export CSV</span>
+          </a>
         </div>
         <div className="text-xs text-[#888] mt-1.5">
           Showing {filteredFleet.length.toLocaleString()} of {inventory.summary.total.toLocaleString()} aircraft
@@ -676,6 +688,7 @@ function InventoryView({
           <table className="w-full text-xs">
             <thead>
               <tr className="text-[#888] text-left border-b border-[#222]">
+                <th className="px-4 py-2.5 font-medium w-[60px]">Visual</th>
                 <th
                   className="px-4 py-2.5 font-medium cursor-pointer hover:text-[#ccc] select-none"
                   onClick={() => onSort('registration')}
@@ -706,14 +719,20 @@ function InventoryView({
                 >
                   Country <SortIcon field="country" current={sortField} dir={sortDir} />
                 </th>
+                <th className="px-4 py-2.5 font-medium text-right">ICAO24</th>
               </tr>
             </thead>
             <tbody>
               {filteredFleet.slice(0, 500).map((ac) => (
                 <tr
                   key={ac.icao24}
-                  className="border-b border-[#1a1a1a] hover:bg-[#111]"
+                  className="border-b border-[#1a1a1a] hover:bg-[#111] group"
                 >
+                  <td className="px-2 py-1">
+                    <div className="opacity-60 group-hover:opacity-100 transition-opacity">
+                      <AircraftSilhouette family={ac.family} size={56} />
+                    </div>
+                  </td>
                   <td className="px-4 py-2 font-mono font-semibold">{ac.registration}</td>
                   <td className="px-4 py-2">{ac.airline}</td>
                   <td className="px-4 py-2">
@@ -733,18 +752,19 @@ function InventoryView({
                     </span>
                   </td>
                   <td className="px-4 py-2 text-[#aaa]">{ac.country}</td>
+                  <td className="px-4 py-2 font-mono text-[#666] text-right text-[11px]">{ac.icao24}</td>
                 </tr>
               ))}
               {filteredFleet.length > 500 && (
                 <tr>
-                  <td colSpan={5} className="px-4 py-3 text-center text-[#888]">
+                  <td colSpan={7} className="px-4 py-3 text-center text-[#888]">
                     Showing first 500 of {filteredFleet.length.toLocaleString()} results. Use the search to narrow down.
                   </td>
                 </tr>
               )}
               {filteredFleet.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-4 py-6 text-center text-[#555]">
+                  <td colSpan={7} className="px-4 py-6 text-center text-[#555]">
                     No aircraft match the filter
                   </td>
                 </tr>
