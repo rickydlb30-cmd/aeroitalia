@@ -13,6 +13,8 @@ import {
   ChevronUp,
   ChevronDown,
   Database,
+  Map,
+  Table,
 } from 'lucide-react';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import {
@@ -29,6 +31,7 @@ import { Download } from 'lucide-react';
 import dynamic from 'next/dynamic';
 
 const MapView = dynamic(() => import('./map-view'), { ssr: false });
+const InventoryMap = dynamic(() => import('./inventory-map'), { ssr: false });
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '';
 
@@ -500,6 +503,7 @@ export default function Dashboard() {
           sortField={inventorySortField}
           sortDir={inventorySortDir}
           onSort={handleInventorySort}
+          mapboxToken={MAPBOX_TOKEN}
         />
       )}
     </div>
@@ -591,6 +595,7 @@ function InventoryView({
   sortField,
   sortDir,
   onSort,
+  mapboxToken,
 }: {
   inventory: InventoryResponse | null;
   loading: boolean;
@@ -600,7 +605,9 @@ function InventoryView({
   sortField: SortField;
   sortDir: SortDir;
   onSort: (field: SortField) => void;
+  mapboxToken: string;
 }) {
+  const [showMap, setShowMap] = useState(true);
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center bg-[#0a0a0a] text-[#888] text-sm">
@@ -654,6 +661,29 @@ function InventoryView({
           </div>
         </div>
       </div>
+
+      {/* Fleet Distribution Map */}
+      {mapboxToken && (
+        <div className="border-b border-[#222222]">
+          <div className="flex items-center justify-between px-4 pt-3 pb-2">
+            <div className="text-[10px] uppercase tracking-wider text-[#888]">
+              Fleet Distribution Map
+            </div>
+            <button
+              onClick={() => setShowMap((v) => !v)}
+              className="flex items-center gap-1 text-[10px] text-[#888] hover:text-[#ccc] transition-colors"
+            >
+              {showMap ? <Table className="w-3 h-3" /> : <Map className="w-3 h-3" />}
+              {showMap ? 'Hide Map' : 'Show Map'}
+            </button>
+          </div>
+          {showMap && (
+            <div className="h-[400px] w-full">
+              <InventoryMap fleet={filteredFleet} token={mapboxToken} search={search} />
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Search bar + download */}
       <div className="p-4 border-b border-[#222222]">
