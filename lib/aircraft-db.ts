@@ -8,6 +8,7 @@
  */
 
 import aircraftDataRaw from './aircraft-data.json';
+import { enrichAirline } from './airline-enrichment';
 
 export interface AircraftInfo {
   registration: string;
@@ -143,10 +144,13 @@ export async function getEUNorthAfricaFleet(): Promise<InventoryAircraft[]> {
     const country = getCountryFromRegistration(info.registration);
     if (!country || !VALID_COUNTRIES.has(country)) continue;
 
+    // Enrich missing airline names using registration-based heuristics
+    const { airline } = enrichAirline(info.registration, info.airline, info.typecode);
+
     fleet.push({
       icao24,
       registration: info.registration,
-      airline: info.airline || 'Unknown',
+      airline,
       type: info.type,
       typecode: info.typecode,
       family: info.family,
