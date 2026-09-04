@@ -16,6 +16,7 @@ import {
   Map,
   Table,
   Crosshair,
+  TrendingUp,
 } from 'lucide-react';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import {
@@ -34,6 +35,7 @@ import dynamic from 'next/dynamic';
 const MapView = dynamic(() => import('./map-view'), { ssr: false });
 const InventoryMap = dynamic(() => import('./inventory-map'), { ssr: false });
 const SimulatorView = dynamic(() => import('./simulator-view'), { ssr: false });
+const StrategyView = dynamic(() => import('./strategy-view'), { ssr: false });
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '';
 
@@ -52,7 +54,7 @@ interface InventoryResponse {
   byType: Record<string, number>;
 }
 
-type ActiveTab = 'live' | 'inventory' | 'simulators';
+type ActiveTab = 'live' | 'inventory' | 'simulators' | 'strategy';
 type SortField = 'registration' | 'airline' | 'type' | 'family' | 'country';
 type SortDir = 'asc' | 'desc';
 
@@ -92,7 +94,7 @@ export default function Dashboard() {
   }, [inventory]);
 
   useEffect(() => {
-    if ((activeTab === 'inventory' || activeTab === 'simulators') && !inventory) {
+    if ((activeTab === 'inventory' || activeTab === 'simulators' || activeTab === 'strategy') && !inventory) {
       fetchInventory();
     }
   }, [activeTab, inventory, fetchInventory]);
@@ -419,6 +421,19 @@ export default function Dashboard() {
               <span className="hidden sm:inline">Simulators</span>
             </span>
           </button>
+          <button
+            onClick={() => setActiveTab('strategy')}
+            className={`px-2.5 py-1 text-xs rounded transition-colors ${
+              activeTab === 'strategy'
+                ? 'bg-[#222] text-[#e5e5e5]'
+                : 'text-[#888] hover:text-[#ccc]'
+            }`}
+          >
+            <span className="flex items-center gap-1">
+              <TrendingUp className="w-3 h-3" />
+              <span className="hidden sm:inline">Strategy</span>
+            </span>
+          </button>
         </div>
 
         <div className="h-5 w-px bg-[#222]" />
@@ -520,10 +535,19 @@ export default function Dashboard() {
           onSort={handleInventorySort}
           mapboxToken={MAPBOX_TOKEN}
         />
-      ) : (
+      ) : activeTab === 'simulators' ? (
         <SimulatorView
           token={MAPBOX_TOKEN}
           fleetByCountry={inventory?.byCountry ?? {}}
+        />
+      ) : (
+        <StrategyView
+          token={MAPBOX_TOKEN}
+          fleetByCountry={inventory?.byCountry ?? {}}
+          fleetByAirline={inventory?.byAirline ?? {}}
+          totalFleet={inventory?.summary.total ?? 0}
+          totalNG={inventory?.summary.totalNG ?? 0}
+          totalMAX={inventory?.summary.totalMAX ?? 0}
         />
       )}
     </div>
