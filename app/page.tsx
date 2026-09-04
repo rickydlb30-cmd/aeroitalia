@@ -15,6 +15,7 @@ import {
   Database,
   Map,
   Table,
+  Crosshair,
 } from 'lucide-react';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import {
@@ -32,6 +33,7 @@ import dynamic from 'next/dynamic';
 
 const MapView = dynamic(() => import('./map-view'), { ssr: false });
 const InventoryMap = dynamic(() => import('./inventory-map'), { ssr: false });
+const SimulatorView = dynamic(() => import('./simulator-view'), { ssr: false });
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '';
 
@@ -50,7 +52,7 @@ interface InventoryResponse {
   byType: Record<string, number>;
 }
 
-type ActiveTab = 'live' | 'inventory';
+type ActiveTab = 'live' | 'inventory' | 'simulators';
 type SortField = 'registration' | 'airline' | 'type' | 'family' | 'country';
 type SortDir = 'asc' | 'desc';
 
@@ -90,7 +92,7 @@ export default function Dashboard() {
   }, [inventory]);
 
   useEffect(() => {
-    if (activeTab === 'inventory' && !inventory) {
+    if ((activeTab === 'inventory' || activeTab === 'simulators') && !inventory) {
       fetchInventory();
     }
   }, [activeTab, inventory, fetchInventory]);
@@ -404,6 +406,19 @@ export default function Dashboard() {
               <span className="hidden sm:inline">Fleet Inventory</span>
             </span>
           </button>
+          <button
+            onClick={() => setActiveTab('simulators')}
+            className={`px-2.5 py-1 text-xs rounded transition-colors ${
+              activeTab === 'simulators'
+                ? 'bg-[#222] text-[#e5e5e5]'
+                : 'text-[#888] hover:text-[#ccc]'
+            }`}
+          >
+            <span className="flex items-center gap-1">
+              <Crosshair className="w-3 h-3" />
+              <span className="hidden sm:inline">Simulators</span>
+            </span>
+          </button>
         </div>
 
         <div className="h-5 w-px bg-[#222]" />
@@ -493,7 +508,7 @@ export default function Dashboard() {
             )}
           </div>
         </div>
-      ) : (
+      ) : activeTab === 'inventory' ? (
         <InventoryView
           inventory={inventory}
           loading={inventoryLoading}
@@ -504,6 +519,11 @@ export default function Dashboard() {
           sortDir={inventorySortDir}
           onSort={handleInventorySort}
           mapboxToken={MAPBOX_TOKEN}
+        />
+      ) : (
+        <SimulatorView
+          token={MAPBOX_TOKEN}
+          fleetByCountry={inventory?.byCountry ?? {}}
         />
       )}
     </div>

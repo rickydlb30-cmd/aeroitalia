@@ -100,8 +100,8 @@ const COUNTRY_OPERATORS: Record<string, { airlines: string[]; dominant?: string 
   // Libya
   '5A-': { airlines: ['Libyan Airlines', 'Afriqiyah Airways'] },
 
-  // Italy — Neos, Ryanair
-  'I-': { airlines: ['Neos', 'Air Italy'] },
+  // Italy — Aeroitalia, Neos, Ryanair
+  'I-': { airlines: ['Aeroitalia', 'Neos', 'Air Italy'] },
 
   // Switzerland
   'HB-': { airlines: ['PrivatAir'] },
